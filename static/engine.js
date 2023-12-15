@@ -70,11 +70,17 @@ canvas.onclick = function(e) {
 }
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let last_id = null;
     for (var i = 0; i < edges.length; i++) {
+        if (edges[i].node1.id == last_id){continue};
         edges[i].draw();
+        last_id = edges[i].node1.id
     }
+    last_id = null;
     for (var i = 0; i < nodes.length; i++) {
+        if (last_id == nodes[i].id){continue}
         nodes[i].draw();
+        last_id = nodes[i].id
     }
 }
 
@@ -168,6 +174,30 @@ solveButton.addEventListener('click', async function() {
     tracing_text.innerText = "Tracing: \n"
     let text = document.getElementById("text-input").value
     text = text.trim()
+    //parsing
+    let lines = text.split("\n")
+    let x = 50;
+    let y = 30;
+    edges = []
+    nodes = []
+    let last = null;
+    lines.forEach(element => {
+        next = element
+        let args = element.split(",")
+        let node = new Node(x,y,Number(args[0])) //20 - radius
+
+        nodes.push(node)
+        x += 50;
+        y += 30;
+        
+        let node2 = new Node(x,y,Number(args[1]))
+        nodes.push(node2)
+        let edge = new Edge(node, node2, Number(args[2]))
+
+        edges.push(edge)
+        redraw()
+    })
+
     let btext = btoa(text)
     let start = Number(window.prompt("Enter start node id: ","0"))
     let end = Number(window.prompt("Enter end node id: ","0"))
@@ -176,16 +206,24 @@ solveButton.addEventListener('click', async function() {
     .then((text) => {
       let result = JSON.parse(text);
       let path = result['path'];
+      let total = result['dist']
       let last = 0;
       let i = 0;
       path.forEach(element => {
         if (i != 0){ 
-            tracing_text.innerText += `from ${last} -> ${element}\n`
+            edges.forEach(args => {
+                if (args.node1.id == last && args.node2.id == element){
+                    tracing_text.innerText += `from ${last} -> ${element}, weight: ${args.weight}\n`
+                }
+            })
+            //tracing_text.innerText += `from ${last} -> ${element}\n`
             //tracing_text.innerText += `from ${node2.id} -> ${node.id}, weight: ${path['dist']}\n`
-            last = element
+            
         }
-
+        last = element;
         i++;
       })
+      
+      tracing_text.innerText += `Total: ${total}`
     });
 })
