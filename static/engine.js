@@ -1,4 +1,5 @@
 var canvas = document.getElementById('canvas');
+var tracing_text = document.getElementById('trace')
 var ctx = canvas.getContext('2d');
 
 var nodes = [];
@@ -120,6 +121,7 @@ connectButton.addEventListener('click', function() {
 
 var solveButton = document.getElementById('solveButton');
 solveButton.addEventListener('click', async function() {
+    tracing_text.innerText = "Tracing: \n"
     let json = JSON.stringify(edges)
     let start = Number(window.prompt("Enter start node id: ","0"))
     let end = Number(window.prompt("Enter end node id: ","0"))
@@ -140,11 +142,16 @@ solveButton.addEventListener('click', async function() {
         ctx.stroke();
         //Draw path edges
         if (i != 0){ 
-            console.log("G")
             let node2 = nodes[i-1]
             ctx.moveTo(node.x, node.y);
             ctx.lineTo(node2.x, node2.y);
             ctx.stroke();
+            edges.forEach(edge => {
+                if (edge.node1.id == node2.id && edge.node2.id == node.id){
+                    tracing_text.innerText += `from ${node2.id} -> ${node.id}, weight: ${edge.weight}\n`
+                }
+            })
+            //tracing_text.innerText += `from ${node2.id} -> ${node.id}, weight: ${path['dist']}\n`
         }
 
         i++;
@@ -153,5 +160,31 @@ solveButton.addEventListener('click', async function() {
     ctx.strokeStyle = "Black";
     ctx.lineWidth = 1;
     console.log(result)
+    });
+})
+
+var solveButton = document.getElementById('text-solve');
+solveButton.addEventListener('click', async function() {
+    tracing_text.innerText = "Tracing: \n"
+    let text = document.getElementById("text-input").value
+    text = text.trim()
+    let btext = btoa(text)
+    let start = Number(window.prompt("Enter start node id: ","0"))
+    let end = Number(window.prompt("Enter end node id: ","0"))
+    fetch(`/api/v1/solve_text?text=${btext}&start=${start}&end=${end}`)
+    .then((response) => response.text())
+    .then((text) => {
+      let result = JSON.parse(text);
+      let path = result['path'];
+
+      let i = 0;
+      path.forEach(element => {
+        if (i != 0){ 
+            tracing_text.innerText += `from ${element-1} -> ${element}\n`
+            //tracing_text.innerText += `from ${node2.id} -> ${node.id}, weight: ${path['dist']}\n`
+        }
+
+        i++;
+      })
     });
 })

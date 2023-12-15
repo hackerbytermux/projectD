@@ -9,6 +9,13 @@
         button{
             margin: 5px;
         }
+        .block{
+            display: inline-block;
+            margin: 2px;
+        }
+        .trace{
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
@@ -17,7 +24,19 @@
     <button id="solveButton">Solve</button>
     <hr>
     <br>
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <div>
+    <canvas class="block" id="canvas" width="800" height="600"></canvas>
+    <div class="block trace">
+        <p id="trace">Tracing: </p>
+    </div>
+    </div>
+    <div>
+        <h1>Text input: </h1>
+        <textarea id="text-input">
+
+        </textarea>
+        <button id="text-solve">Solve</button>
+    </div>
     <script src="engine.js"></script>
 </body>
 </html>
