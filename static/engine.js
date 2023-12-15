@@ -176,12 +176,13 @@ solveButton.addEventListener('click', async function() {
     .then((text) => {
       let result = JSON.parse(text);
       let path = result['path'];
-
+      let last = 0;
       let i = 0;
       path.forEach(element => {
         if (i != 0){ 
-            tracing_text.innerText += `from ${element-1} -> ${element}\n`
+            tracing_text.innerText += `from ${last} -> ${element}\n`
             //tracing_text.innerText += `from ${node2.id} -> ${node.id}, weight: ${path['dist']}\n`
+            last = element
         }
 
         i++;
