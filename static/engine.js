@@ -68,19 +68,14 @@ canvas.onclick = function(e) {
     
     redraw();
 }
+
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let last_id = null;
     for (var i = 0; i < edges.length; i++) {
-        if (edges[i].node1.id == last_id){continue};
         edges[i].draw();
-        last_id = edges[i].node1.id
     }
-    last_id = null;
     for (var i = 0; i < nodes.length; i++) {
-        if (last_id == nodes[i].id){continue}
         nodes[i].draw();
-        last_id = nodes[i].id
     }
 }
 
@@ -169,6 +164,32 @@ solveButton.addEventListener('click', async function() {
     });
 })
 
+
+function calculatePosition(base_x, base_y, radius, angle) {
+    var x = base_x + radius * Math.cos(angle * Math.PI / 180);
+    var y = base_y + radius * Math.sin(angle * Math.PI / 180);
+    return {x: x, y: y};
+}
+
+function getNodeById(nodes, id) {
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === id) {
+            return nodes[i];
+        }
+    }
+    return null; // return null if no node with the given id is found
+}
+
+function getEdgeByNodeIds(edges, node1Id, node2Id) {
+    for (let i = 0; i < edges.length; i++) {
+        if ((edges[i].node1.id === node1Id && edges[i].node2.id === node2Id) ||
+            (edges[i].node1.id === node2Id && edges[i].node2.id === node1Id)) {
+            return edges[i];
+        }
+    }
+    return null; // or throw an error, depending on your needs
+}
+
 var solveButton = document.getElementById('text-solve');
 solveButton.addEventListener('click', async function() {
     tracing_text.innerText = "Tracing: \n"
@@ -176,26 +197,40 @@ solveButton.addEventListener('click', async function() {
     text = text.trim()
     //parsing
     let lines = text.split("\n")
-    let x = 50;
-    let y = 30;
+    let x = 400;
+    let y = 300;
+    let angle = 0;
+    let angle_add = 360/lines.length
     edges = []
     nodes = []
-    let last = null;
     lines.forEach(element => {
-        next = element
         let args = element.split(",")
-        let node = new Node(x,y,Number(args[0])) //20 - radius
+        let id_1 = Number(args[0])
+        let id_2 = Number(args[1])
+        let node_1 = null
+        let node_2 = null
+        if (getNodeById(nodes,id_1) == null){
+            let pos = calculatePosition(x,y,100,angle);
+            node_1 = new Node(pos.x,pos.y,id_1) //20 - radius
+            nodes.push(node_1)
+            angle += angle_add
+        }else{
+            node_1 = getNodeById(nodes,id_1);
+        }
 
-        nodes.push(node)
-        x += 50;
-        y += 30;
+        if (getNodeById(nodes,id_2) == null){
+            let pos = calculatePosition(x,y,100,angle);
+            node_2 = new Node(pos.x,pos.y,Number(id_2)) //20 - radius
+            nodes.push(node_2)
+            angle += angle_add
+        }else{
+            node_2 = getNodeById(nodes,id_2)
+        }
+
+        edge = new Edge(node_1, node_2, Number(args[2]))
         
-        let node2 = new Node(x,y,Number(args[1]))
-        nodes.push(node2)
-        let edge = new Edge(node, node2, Number(args[2]))
-
         edges.push(edge)
-        redraw()
+        redraw();
     })
 
     let btext = btoa(text)
@@ -207,22 +242,11 @@ solveButton.addEventListener('click', async function() {
       let result = JSON.parse(text);
       let path = result['path'];
       let total = result['dist']
-      let last = 0;
-      let i = 0;
-      path.forEach(element => {
-        if (i != 0){ 
-            edges.forEach(args => {
-                if (args.node1.id == last && args.node2.id == element){
-                    tracing_text.innerText += `from ${last} -> ${element}, weight: ${args.weight}\n`
-                }
-            })
-            //tracing_text.innerText += `from ${last} -> ${element}\n`
-            //tracing_text.innerText += `from ${node2.id} -> ${node.id}, weight: ${path['dist']}\n`
-            
-        }
-        last = element;
-        i++;
-      })
+      console.log(edges)
+      for(i = 0; i<path.length-1;i++){
+        let edge = getEdgeByNodeIds(edges,path[i], path[i+1])
+        tracing_text.innerText += `from ${path[i]} -> ${path[i+1]}, with weight: ${edge.weight}\n`
+      }
       
       tracing_text.innerText += `Total: ${total}`
     });
