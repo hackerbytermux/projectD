@@ -79,6 +79,21 @@ function redraw() {
     }
 }
 
+function draw_path(node, node2) {
+    ctx.beginPath();
+    ctx.strokeStyle = "Green";
+    ctx.lineWidth = 2;
+    ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+    ctx.stroke();
+    
+    ctx.moveTo(node.x, node.y);
+    ctx.lineTo(node2.x, node2.y);
+    ctx.stroke();
+
+    ctx.strokeStyle = "Black";
+    ctx.lineWidth = 1;
+}
+
 canvas.oncontextmenu = function(e) {
     e.preventDefault();
     var x = e.clientX - canvas.offsetLeft;
@@ -200,7 +215,7 @@ solveButton.addEventListener('click', async function() {
     let x = 400;
     let y = 300;
     let angle = 0;
-    let angle_add = 360/lines.length
+    let angle_add = 180/lines.length
     edges = []
     nodes = []
     lines.forEach(element => {
@@ -246,6 +261,12 @@ solveButton.addEventListener('click', async function() {
       for(i = 0; i<path.length-1;i++){
         let edge = getEdgeByNodeIds(edges,path[i], path[i+1])
         tracing_text.innerText += `from ${path[i]} -> ${path[i+1]}, with weight: ${edge.weight}\n`
+        //draw path
+        let node = getNodeById(nodes,path[i])
+        let node2 = getNodeById(nodes,path[i+1])
+        console.log(node)
+        console.log(node2)
+        draw_path(node, node2)
       }
       
       tracing_text.innerText += `Total: ${total}`
